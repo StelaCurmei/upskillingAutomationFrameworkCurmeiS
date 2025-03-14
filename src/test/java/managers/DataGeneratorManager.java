@@ -2,10 +2,11 @@ package managers;
 
 import com.github.javafaker.Faker;
 
+import java.util.Random;
 import java.util.regex.Pattern;
 
 public class DataGeneratorManager {
-    private static Faker faker = new Faker();
+    private static final Faker faker = new Faker();
     public static String getRandomEmail() {
         String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$";
         String email;

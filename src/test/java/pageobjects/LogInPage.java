@@ -17,7 +17,7 @@ public class LogInPage {
     private WebElement submit;
 
     @FindBy(id = "signup")
-    private WebElement signup;
+    private WebElement signUp;
 
     public LogInPage(WebDriver driver) {
         PageFactory.initElements(driver, this);
@@ -47,10 +47,10 @@ public class LogInPage {
         submit.click();  // Clicking on submit button
     }
 
-    public WebElement getSignup() {
-        return signup;
+    public WebElement getSignUp() {
+        return signUp;
     }
-    public void clickSignup() {
-        signup.click();
+    public void clickSignUp() {
+        signUp.click();
     }
 }
