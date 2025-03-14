@@ -46,10 +46,10 @@ public class DriverManager {
         return instance.driver;
     }
 
-    public static void quitDriver() {
-        if (instance != null && instance.driver != null) {
-            instance.driver.quit();
-            instance = null;
-        }
-    }
+//    public static void quitDriver() {
+//        if (instance != null && instance.driver != null) {
+//            instance.driver.quit();
+//            instance = null;
+//        }
+//    }
 }

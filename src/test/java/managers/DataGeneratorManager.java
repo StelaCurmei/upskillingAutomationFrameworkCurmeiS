@@ -1,8 +1,6 @@
 package managers;
 
 import com.github.javafaker.Faker;
-
-import java.util.Random;
 import java.util.regex.Pattern;
 
 public class DataGeneratorManager {

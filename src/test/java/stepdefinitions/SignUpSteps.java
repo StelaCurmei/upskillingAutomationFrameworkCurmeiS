@@ -7,6 +7,8 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import managers.DataGeneratorManager;
 import managers.DriverManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -15,32 +17,34 @@ import pageobjects.LogInPage;
 
 import java.time.Duration;
 
+
 public class SignUpSteps {
+    private static final Logger LOG = LogManager.getLogger(SignUpSteps.class);
     WebDriver driver = DriverManager.getDriver();
     ConfigReader configReader = new ConfigReader();
     AddUserPage addUserPage = new AddUserPage(driver);
     LogInPage logInPage = new LogInPage(driver);
 
+
     @Given("Log in page is accessed")
     public void accessSite() {
         String url = configReader.getProperty("logInUrl");
-
-        System.out.println("Loaded URL: " + configReader.getProperty("logInUrl"));
-
-        System.out.println("Navigating to: " + url);  // ✅ Debugging output
+        LOG.info("Loaded URL:{}", url);
+        LOG.info("Navigating to:{}", url);
         driver.get(url);
-        System.out.println("Log in page is accessed");
+        LOG.info("Log in page is accessed.");
     }
+
     @And("Sign Up button is clicked")
     public void clickSignUp() {
-        logInPage.clickSignup();
+        logInPage.clickSignUp();
 
         String currentUrl = driver.getCurrentUrl();
-        System.out.println("Current URL: " + currentUrl);
+        LOG.info("Current URL:{}", currentUrl);
     }
 
     @When("Valid sign in data is entered")
-    public void enterData() {
+    public void enterSignUpData() {
         addUserPage.setFirstName(DataGeneratorManager.getRandomFirstName());
         addUserPage.setLastName(DataGeneratorManager.getRandomLastName());
         addUserPage.setEmail(DataGeneratorManager.getRandomEmail());
@@ -48,9 +52,10 @@ public class SignUpSteps {
     }
 
     @And("Submit button is clicked")
-    public void submitButtonIsClicked() {
+    public void clickSubmitButton() {
         addUserPage.clickSubmit();
     }
+
     @Then("User is redirected to Contact list page")
     public void userIsRedirectedToContactListPage() {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10)); // Timeout after 10 seconds
@@ -59,9 +64,9 @@ public class SignUpSteps {
         String currentUrl = driver.getCurrentUrl();
         assert currentUrl != null;
         if (currentUrl.equals(configReader.getProperty("contactListUrl"))) {
-            System.out.println("Test Passed: Redirect successful to " + configReader.getProperty("contactListUrl"));
+            LOG.info("Test Passed: Redirect successful to: {}", currentUrl);
         } else {
-            System.out.println("Test Failed: Redirect did not happen or went to a wrong URL. Current URL: " + currentUrl);
+            LOG.info("Test failed: Redirect didn't happen or a wrong URL was opened. Current URL is: {}", currentUrl);
         }
     }
 }
