@@ -9,6 +9,7 @@ import managers.DataGeneratorManager;
 import managers.DriverManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.Assert;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -25,14 +26,21 @@ public class SignUpSteps {
     AddUserPage addUserPage = new AddUserPage(driver);
     LogInPage logInPage = new LogInPage(driver);
 
-
     @Given("Log in page is accessed")
     public void accessSite() {
         String url = configReader.getProperty("logInUrl");
         LOG.info("Loaded URL:{}", url);
         LOG.info("Navigating to:{}", url);
         driver.get(url);
-        LOG.info("Log in page is accessed.");
+        String currentUrl = driver.getCurrentUrl();
+
+        assert currentUrl != null;
+        if (currentUrl.equals(configReader.getProperty("logInUrl"))) {
+            LOG.info("Log in page is accessed: {}", currentUrl);
+        } else {
+            LOG.info("Test failed: Log in page is not loaded or a wrong URL was opened. Current URL is: {}", currentUrl);
+        }
+        Assert.assertEquals( "Test failed: Log in page is not loaded or a wrong URL was opened. Current URL is: {}", url, currentUrl);
     }
 
     @And("Sign Up button is clicked")
