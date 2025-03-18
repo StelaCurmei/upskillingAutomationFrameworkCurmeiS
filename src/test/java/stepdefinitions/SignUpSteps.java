@@ -46,11 +46,20 @@ public class SignUpSteps {
     @And("Sign Up button is clicked")
     public void clickSignUp() {
         logInPage.clickSignUp();
+        String url = driver.getCurrentUrl();
 
+        // Wait for the URL to change after clicking Sign Up
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        wait.until(ExpectedConditions.urlContains("addUser")); // Adjust this based on actual URL
+
+        String expectedUrl = configReader.getProperty("addUserUrl"); // Update if necessary
         String currentUrl = driver.getCurrentUrl();
-        LOG.info("Current URL:{}", currentUrl);
-    }
 
+        LOG.info("Current URL: {}", currentUrl);
+
+        // Assertion to check if the URL is correct
+        Assert.assertEquals("Test Failed: Incorrect Sign-Up URL loaded.", expectedUrl, currentUrl);
+    }
     @When("Valid sign in data is entered")
     public void enterSignUpData() {
         addUserPage.setFirstName(DataGeneratorManager.getRandomFirstName());
@@ -66,15 +75,24 @@ public class SignUpSteps {
 
     @Then("User is redirected to Contact list page")
     public void userIsRedirectedToContactListPage() {
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10)); // Timeout after 10 seconds
-        wait.until(ExpectedConditions.urlToBe(configReader.getProperty("contactListUrl")));
+        String expectedUrl = configReader.getProperty("contactListUrl");
 
-        String currentUrl = driver.getCurrentUrl();
-        assert currentUrl != null;
-        if (currentUrl.equals(configReader.getProperty("contactListUrl"))) {
-            LOG.info("Test Passed: Redirect successful to: {}", currentUrl);
-        } else {
-            LOG.info("Test failed: Redirect didn't happen or a wrong URL was opened. Current URL is: {}", currentUrl);
+        if (expectedUrl == null || expectedUrl.isEmpty()) {
+            LOG.error("Expected contact list URL is missing in the configuration.");
+            throw new IllegalArgumentException("Contact list URL is missing in the configuration file.");
         }
+
+        // Wait until the URL changes to the expected URL
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait.until(ExpectedConditions.urlToBe(expectedUrl));
+
+        // Get the current URL after waiting
+        String currentUrl = driver.getCurrentUrl();
+        LOG.info("Current URL: {}", currentUrl);
+
+        // Assertion to ensure the redirection happened correctly
+        Assert.assertEquals("Test Failed: Redirect didn't happen or a wrong URL was opened.", expectedUrl, currentUrl);
+
+        LOG.info("Test Passed: Redirect successful to: {}", currentUrl);
     }
 }
