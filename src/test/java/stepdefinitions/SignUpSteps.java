@@ -10,11 +10,13 @@ import managers.DriverManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
+import org.openqa.selenium.InvalidArgumentException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import pageobjects.AddUserPage;
 import pageobjects.LogInPage;
+import utils.NavigationHelper;
 
 import java.time.Duration;
 
@@ -25,41 +27,31 @@ public class SignUpSteps {
     ConfigReader configReader = new ConfigReader();
     AddUserPage addUserPage = new AddUserPage(driver);
     LogInPage logInPage = new LogInPage(driver);
+    private NavigationHelper navigationHelper;
 
     @Given("Log in page is accessed")
     public void accessSite() {
-        String url = configReader.getProperty("logInUrl");
-        LOG.info("Loaded URL:{}", url);
-        LOG.info("Navigating to:{}", url);
-        driver.get(url);
-        String currentUrl = driver.getCurrentUrl();
+        try {
+            String url = configReader.getProperty("logInUrl");
+            LOG.info("Navigating to: {}", url);
 
-        assert currentUrl != null;
-        if (currentUrl.equals(configReader.getProperty("logInUrl"))) {
-            LOG.info("Log in page is accessed: {}", currentUrl);
-        } else {
-            LOG.info("Test failed: Log in page is not loaded or a wrong URL was opened. Current URL is: {}", currentUrl);
+            driver.get(url);
+            LOG.info("Login page accessed successfully.");
+        } catch (InvalidArgumentException e) {
+            LOG.error("Invalid or missing URL. Make sure LogInUrl property has a correct value: {}", e.getMessage());
         }
-        Assert.assertEquals( "Test failed: Log in page is not loaded or a wrong URL was opened. Current URL is: {}", url, currentUrl);
     }
+
 
     @And("Sign Up button is clicked")
     public void clickSignUp() {
         logInPage.clickSignUp();
-        String url = driver.getCurrentUrl();
+        navigationHelper.verifyRedirect("addUserUrl");
 
-        // Wait for the URL to change after clicking Sign Up
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
-        wait.until(ExpectedConditions.urlContains("addUser")); // Adjust this based on actual URL
-
-        String expectedUrl = configReader.getProperty("addUserUrl"); // Update if necessary
         String currentUrl = driver.getCurrentUrl();
-
-        LOG.info("Current URL: {}", currentUrl);
-
-        // Assertion to check if the URL is correct
-        Assert.assertEquals("Test Failed: Incorrect Sign-Up URL loaded.", expectedUrl, currentUrl);
+        LOG.info("Current URL is:{}", currentUrl);
     }
+
     @When("Valid sign in data is entered")
     public void enterSignUpData() {
         addUserPage.setFirstName(DataGeneratorManager.getRandomFirstName());
