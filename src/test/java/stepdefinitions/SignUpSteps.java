@@ -27,7 +27,7 @@ public class SignUpSteps {
     ConfigReader configReader = new ConfigReader();
     AddUserPage addUserPage = new AddUserPage(driver);
     LogInPage logInPage = new LogInPage(driver);
-    private NavigationHelper navigationHelper;
+    NavigationHelper navigationHelper = new NavigationHelper(driver);
 
     @Given("Log in page is accessed")
     public void accessSite() {
@@ -54,10 +54,14 @@ public class SignUpSteps {
 
     @When("Valid sign in data is entered")
     public void enterSignUpData() {
+        // Generate and set user data
+        String email = DataGeneratorManager.getRandomEmail();
+        String password = DataGeneratorManager.getRandomPassword();
+
         addUserPage.setFirstName(DataGeneratorManager.getRandomFirstName());
         addUserPage.setLastName(DataGeneratorManager.getRandomLastName());
-        addUserPage.setEmail(DataGeneratorManager.getRandomEmail());
-        addUserPage.setPassword(DataGeneratorManager.getRandomPassword());
+        addUserPage.setEmail(email);
+        addUserPage.setPassword(password);
     }
 
     @And("Submit button is clicked")

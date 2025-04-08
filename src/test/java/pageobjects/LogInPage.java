@@ -17,15 +17,16 @@ public class LogInPage {
     private WebElement submit;
 
     @FindBy(id = "signup")
-    private static WebElement signUp;
+    private WebElement signUp;
 
     public LogInPage(WebDriver driver) {
         PageFactory.initElements(driver, this);
     }
 
-    public WebElement getEmail() {
-        return email;
-    }
+//    public WebElement getEmail() {
+//        return email;
+//    }
+
 
     public void setEmail(String emailInput) {
         email.sendKeys(emailInput); // Entering email into email text field
@@ -53,4 +54,10 @@ public class LogInPage {
     public void clickSignUp() {
         signUp.click();
     }
+    public void logIn(String email, String password) {
+        setEmail(email);
+        setPassword(password);
+        clickSubmit();
+    }
 }
+

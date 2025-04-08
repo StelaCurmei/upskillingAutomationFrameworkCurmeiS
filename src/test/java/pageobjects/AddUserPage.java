@@ -66,4 +66,11 @@ public class AddUserPage {
     public void clickSubmit() {
         submit.click();  // Clicking on submit button
     }
+    public void signUp(String firstName, String lastName, String email, String password) {
+        this.firstName.sendKeys(firstName);
+        this.lastName.sendKeys(lastName);
+        this.email.sendKeys(email);
+        this.password.sendKeys(password);
+        this.submit.click();
+    }
 }
