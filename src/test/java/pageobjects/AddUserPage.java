@@ -48,7 +48,7 @@ public class AddUserPage {
     }
 
     public void setEmail(String emailInput) {
-        email.sendKeys(emailInput); // Entering email into email text field
+        this.email.sendKeys(emailInput); // Entering email into email text field
     }
 
     public WebElement getPassword() {
@@ -67,10 +67,10 @@ public class AddUserPage {
         submit.click();  // Clicking on submit button
     }
     public void signUp(String firstName, String lastName, String email, String password) {
-        this.firstName.sendKeys(firstName);
-        this.lastName.sendKeys(lastName);
-        this.email.sendKeys(email);
-        this.password.sendKeys(password);
-        this.submit.click();
+        setFirstName(firstName);
+        setLastName(lastName);
+        setEmail(email);
+        setPassword(password);
+        clickSubmit();
     }
 }

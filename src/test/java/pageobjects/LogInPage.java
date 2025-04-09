@@ -23,11 +23,6 @@ public class LogInPage {
         PageFactory.initElements(driver, this);
     }
 
-//    public WebElement getEmail() {
-//        return email;
-//    }
-
-
     public void setEmail(String emailInput) {
         email.sendKeys(emailInput); // Entering email into email text field
     }

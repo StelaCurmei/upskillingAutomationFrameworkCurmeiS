@@ -1,5 +1,6 @@
 Feature: SignUp
-  @OpenBrowser
+  @Ui
+#  @run
   Scenario: Verify a new user is signed up with valid data
     Given Log in page is accessed
     And Sign Up button is clicked

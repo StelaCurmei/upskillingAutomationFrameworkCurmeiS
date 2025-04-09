@@ -1,6 +1,6 @@
 package hooks;
 
-import io.cucumber.java.AfterAll;
+import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,14 +12,14 @@ public class ExecutionHooks {
     //static WebDriver driver = DriverManager.getDriver();
     private static final Logger LOG = LogManager.getLogger(ExecutionHooks.class);
 
-    @Before(order = 1, value = "@OpenBrowser")
+    @Before(order = 1, value = "@Ui")
     public static void setUp() {
         // Initialize the WebDriver before test
         getDriver();  // Use DriverManager to initialize WebDriver
         LOG.info("Opening the browser...");
     }
 
-    @AfterAll
+    @After(order = 1, value = "@Ui")
     public static void tearDown() {
         // Quit the WebDriver after test
         quitDriver();
