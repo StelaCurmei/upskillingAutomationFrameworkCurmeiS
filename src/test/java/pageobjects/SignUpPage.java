@@ -6,7 +6,7 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
 
-public class AddUserPage {
+public class SignUpPage {
 
     @FindBy(id = "firstName")
     private WebElement firstName;
@@ -23,7 +23,7 @@ public class AddUserPage {
     @FindBy(id = "submit")
     private WebElement submit;
 
-    public AddUserPage(WebDriver driver) {
+    public SignUpPage(WebDriver driver) {
         PageFactory.initElements(driver, this);
     }
 
@@ -32,7 +32,7 @@ public class AddUserPage {
     }
 
     public void setFirstName(String firstNameInput) {
-        firstName.sendKeys(firstNameInput); // Entering firstName into firstName text field
+        this.firstName.sendKeys(firstNameInput); // Entering firstName into firstName text field
     }
 
     public WebElement getLastName() {
@@ -40,7 +40,7 @@ public class AddUserPage {
     }
 
     public void setLastName(String lastNameInput) {
-        lastName.sendKeys(lastNameInput);  // Entering lastName into lastName text field
+        this.lastName.sendKeys(lastNameInput);  // Entering lastName into lastName text field
     }
 
     public WebElement getEmail() {
@@ -56,7 +56,7 @@ public class AddUserPage {
     }
 
     public void setPassword(String passwordInput) {
-        password.sendKeys(passwordInput); // Setting password
+        this.password.sendKeys(passwordInput); // Setting password
     }
 
     public WebElement getSubmit() {
@@ -64,8 +64,9 @@ public class AddUserPage {
     }
 
     public void clickSubmit() {
-        submit.click();  // Clicking on submit button
+        this.submit.click();  // Clicking on submit button
     }
+
     public void signUp(String firstName, String lastName, String email, String password) {
         setFirstName(firstName);
         setLastName(lastName);

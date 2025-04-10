@@ -24,7 +24,7 @@ public class LogInPage {
     }
 
     public void setEmail(String emailInput) {
-        email.sendKeys(emailInput); // Entering email into email text field
+        this.email.sendKeys(emailInput); // Entering email into email text field
     }
 
     public WebElement getPassword() {
@@ -32,7 +32,7 @@ public class LogInPage {
     }
 
     public void setPassword(String passwordInput) {
-        password.sendKeys(passwordInput); // Setting password
+        this.password.sendKeys(passwordInput); // Setting password
     }
 
     public WebElement getSubmit() {
@@ -40,15 +40,17 @@ public class LogInPage {
     }
 
     public void clickSubmit() {
-        submit.click();  // Clicking on submit button
+        this.submit.click();  // Clicking on submit button
     }
 
     public WebElement getSignUp() {
         return signUp;
     }
+
     public void clickSignUp() {
-        signUp.click();
+        this.signUp.click();
     }
+
     public void logIn(String email, String password) {
         setEmail(email);
         setPassword(password);

@@ -17,9 +17,9 @@ import org.openqa.selenium.InvalidArgumentException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import pageobjects.AddUserPage;
 import pageobjects.ContactListPage;
 import pageobjects.LogInPage;
+import pageobjects.SignUpPage;
 
 import java.time.Duration;
 
@@ -30,7 +30,7 @@ public class LogInSteps {
 
     private WebDriver driver;
     private LogInPage loginPage;
-    private AddUserPage addUserPage;
+    private SignUpPage signUpPage;
     ContactListPage contactListPage = new ContactListPage(driver);
     private ConfigReader configReader;
 
@@ -41,7 +41,7 @@ public class LogInSteps {
 
         // 2. Initialize page objects
         loginPage = new LogInPage(driver);
-        addUserPage = new AddUserPage(driver);
+        signUpPage = new SignUpPage(driver);
         contactListPage = new ContactListPage(driver);
 
         // 3. Initialize the ConfigReader (and any other utilities)
@@ -73,8 +73,7 @@ public class LogInSteps {
         String password = DataGeneratorManager.getRandomPassword();
         System.out.println(firstName + " " + lastName + " " + email + " " + password);
 
-        addUserPage.signUp(firstName, lastName, email, password);
-        addUserPage.clickSubmit();
+        signUpPage.signUp(firstName, lastName, email, password);
         contactListPage.clickLogout();
 
         // Store credentials in scenario context for later retrieval

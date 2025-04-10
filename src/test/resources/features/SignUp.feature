@@ -1,4 +1,5 @@
 Feature: SignUp
+
   @Ui
 #  @run
   Scenario: Verify a new user is signed up with valid data

@@ -14,8 +14,8 @@ import org.openqa.selenium.InvalidArgumentException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import pageobjects.AddUserPage;
 import pageobjects.LogInPage;
+import pageobjects.SignUpPage;
 import utils.NavigationHelper;
 
 import java.time.Duration;
@@ -25,7 +25,7 @@ public class SignUpSteps {
     private static final Logger LOG = LogManager.getLogger(SignUpSteps.class);
     WebDriver driver = DriverManager.getDriver();
     ConfigReader configReader = new ConfigReader();
-    AddUserPage addUserPage = new AddUserPage(driver);
+    SignUpPage signUpPage = new SignUpPage(driver);
     LogInPage logInPage = new LogInPage(driver);
     NavigationHelper navigationHelper = new NavigationHelper(driver);
 
@@ -58,15 +58,15 @@ public class SignUpSteps {
         String email = DataGeneratorManager.getRandomEmail();
         String password = DataGeneratorManager.getRandomPassword();
 
-        addUserPage.setFirstName(DataGeneratorManager.getRandomFirstName());
-        addUserPage.setLastName(DataGeneratorManager.getRandomLastName());
-        addUserPage.setEmail(email);
-        addUserPage.setPassword(password);
+        signUpPage.setFirstName(DataGeneratorManager.getRandomFirstName());
+        signUpPage.setLastName(DataGeneratorManager.getRandomLastName());
+        signUpPage.setEmail(email);
+        signUpPage.setPassword(password);
     }
 
     @And("Submit button is clicked")
     public void clickSubmitButton() {
-        addUserPage.clickSubmit();
+        signUpPage.clickSubmit();
     }
 
     @Then("User is redirected to Contact list page")
