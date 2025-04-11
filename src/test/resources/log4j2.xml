@@ -6,15 +6,25 @@
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
 
-        <!-- File Logger -->
-        <File name="FileLogger" fileName="logs/test-execution.log">
+        <!-- File Logger with dynamic folder for each test case -->
+        <File name="FileLogger" fileName="logs/${ctx:testName}/test-execution.log">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </File>
+        <Routing name="ScenarioLogger">
+            <Routes pattern="$${ctx:testName}">
+                <Route>
+                    <File name="Loggers" fileName="logs/${ctx:testTime}/${ctx:testName}.log" append="true" createDirs="true">
+                        <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+                    </File>
+                </Route>
+            </Routes>
+        </Routing>
     </Appenders>
     <Loggers>
         <Root level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="FileLogger"/>
+            <AppenderRef ref="ScenarioLogger"/>
         </Root>
     </Loggers>
 </Configuration>
