@@ -19,6 +19,9 @@ public class LogInPage {
     @FindBy(id = "signup")
     private WebElement signUp;
 
+    @FindBy(id = "error")
+    private WebElement error;
+
     public LogInPage(WebDriver driver) {
         PageFactory.initElements(driver, this);
     }
@@ -51,10 +54,15 @@ public class LogInPage {
         this.signUp.click();
     }
 
+    public WebElement getErrorMessage() {
+        return error;
+    }
+
     public void logIn(String email, String password) {
         setEmail(email);
         setPassword(password);
         clickSubmit();
     }
+
 }
 
