@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class ScenarioContext {
     private static ScenarioContext instance;
-    private final Map<ContextKey, String> scenarioContext;
+    private final Map<ContextKey, Object> scenarioContext; // Changed from String to Object
 
     // Private constructor to prevent instantiation
     private ScenarioContext() {
@@ -20,11 +20,12 @@ public class ScenarioContext {
         return instance;
     }
 
-    public static void setScenarioContext(ContextKey key, String value) {
+    public static void setScenarioContext(ContextKey key, Object value) {
         getInstance().scenarioContext.put(key, value);
     }
 
-    public static String getScenarioContext(ContextKey key) {
-        return getInstance().scenarioContext.get(key);
+    @SuppressWarnings("unchecked")
+    public static <T> T getScenarioContext(ContextKey key) {
+        return (T) getInstance().scenarioContext.get(key);
     }
 }
