@@ -19,6 +19,9 @@ public class LogInPage {
     @FindBy(id = "signup")
     private WebElement signUp;
 
+    @FindBy(id = "error")
+    private WebElement error;
+
     public LogInPage(WebDriver driver) {
         PageFactory.initElements(driver, this);
     }
@@ -27,12 +30,20 @@ public class LogInPage {
         this.email.sendKeys(emailInput); // Entering email into email text field
     }
 
+    public void clearEmail() {
+        this.email.clear();
+    }
+
     public WebElement getPassword() {
         return password;
     }
 
     public void setPassword(String passwordInput) {
         this.password.sendKeys(passwordInput); // Setting password
+    }
+
+    public void clearPassword() {
+        this.password.clear();
     }
 
     public WebElement getSubmit() {
@@ -51,10 +62,19 @@ public class LogInPage {
         this.signUp.click();
     }
 
+    public WebElement getErrorMessage() {
+        return error;
+    }
+
+    public String getMessageText() {
+        return error.getText();
+    }
+
     public void logIn(String email, String password) {
         setEmail(email);
         setPassword(password);
         clickSubmit();
     }
+
 }
 

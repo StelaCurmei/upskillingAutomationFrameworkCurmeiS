@@ -3,96 +3,82 @@ package stepdefinitions;
 import configreader.ConfigReader;
 import context.ContextKey;
 import context.ScenarioContext;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
-import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import managers.DataGeneratorManager;
-import managers.DriverManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.openqa.selenium.By;
-import org.openqa.selenium.InvalidArgumentException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import pageobjects.ContactListPage;
 import pageobjects.LogInPage;
 import pageobjects.SignUpPage;
+import utils.CommonActions;
 
 import java.time.Duration;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class LogInSteps {
 
     private static final Logger LOG = LogManager.getLogger(LogInSteps.class);
 
+    private CommonActions commonActions;
     private WebDriver driver;
+    private ConfigReader configReader;
     private LogInPage loginPage;
     private SignUpPage signUpPage;
-    ContactListPage contactListPage = new ContactListPage(driver);
-    private ConfigReader configReader;
+    private ContactListPage contactListPage;
 
-    // Cucumber requires a no-arg constructor if you're not using a DI framework
     public LogInSteps() {
-        // 1. Initialize the WebDriver
-        driver = DriverManager.getDriver();
+        // Instantiate our helper that sets up the driver and configuration.
+        commonActions = new CommonActions();
+        driver = commonActions.getDriver();
+        configReader = commonActions.getConfigReader();
 
-        // 2. Initialize page objects
+        // Initialize page objects using the driver from CommonActions.
         loginPage = new LogInPage(driver);
         signUpPage = new SignUpPage(driver);
         contactListPage = new ContactListPage(driver);
-
-        // 3. Initialize the ConfigReader (and any other utilities)
-        configReader = new ConfigReader();
     }
 
-    @Given("log in page is accessed")
-    public void accessSite() {
-        try {
-            String url = configReader.getProperty("logInUrl");
-            LOG.info("Navigating to: {}", url);
-
-            driver.get(url);
-            LOG.info("Login page accessed successfully.");
-        } catch (InvalidArgumentException e) {
-            LOG.error("Invalid or missing URL. Make sure LogInUrl property has a correct value: {}", e.getMessage());
-        }
-    }
+    // -------------------------------------------------
+    // Positive Scenario Steps (unchanged)
+    // -------------------------------------------------
 
     @And("a new user is signed up")
     public void signUp() {
-        // Use your existing page object methods
         loginPage.clickSignUp();
 
-        // Generate and fill in user data
         String firstName = DataGeneratorManager.getRandomFirstName();
         String lastName = DataGeneratorManager.getRandomLastName();
         String email = DataGeneratorManager.getRandomEmail();
         String password = DataGeneratorManager.getRandomPassword();
-        System.out.println(firstName + " " + lastName + " " + email + " " + password);
+
+        LOG.info("Signing up new user: {} {} {} {}", firstName, lastName, email, password);
 
         signUpPage.signUp(firstName, lastName, email, password);
         contactListPage.clickLogout();
 
-        // Store credentials in scenario context for later retrieval
         ScenarioContext.setScenarioContext(ContextKey.EMAIL, email);
         ScenarioContext.setScenarioContext(ContextKey.PASSWORD, password);
     }
 
     @When("the signed up user enters valid login data")
     public void enterValidLoginData() {
-        // Retrieve credentials from your scenario context
         String email = ScenarioContext.getScenarioContext(ContextKey.EMAIL);
         String password = ScenarioContext.getScenarioContext(ContextKey.PASSWORD);
 
-        // Create an explicit wait for the email element to be visible
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("email")));
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("password")));
 
-        // Populate the login form using your page object methods
         loginPage.setEmail(email);
         loginPage.setPassword(password);
     }
@@ -110,15 +96,73 @@ public class LogInSteps {
             throw new IllegalArgumentException("Contact list URL is missing in the configuration file.");
         }
 
-        // Wait for the page to redirect
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         wait.until(ExpectedConditions.urlToBe(expectedUrl));
 
-        // Verify the URL
         String currentUrl = driver.getCurrentUrl();
         LOG.info("Current URL: {}", currentUrl);
         Assert.assertEquals("Test Failed: Redirect didn't happen or a wrong URL was opened.", expectedUrl, currentUrl);
-
         LOG.info("Test Passed: Redirect successful to: {}", currentUrl);
+    }
+
+    // -------------------------------------------------
+    // Negative Scenario Steps
+    // -------------------------------------------------
+
+    @When("the user attempts to log in with invalid credentials:")
+    public void attemptInvalidLogin(DataTable dataTable) {
+        // Convert the DataTable to a list of maps.
+        List<Map<String, String>> invalidCases = dataTable.asMaps(String.class, String.class);
+
+        // Prepare lists to store expected and actual error messages.
+        List<String> actualErrors = new ArrayList<>();
+
+        // Create a WebDriverWait instance with a suitable timeout.
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+        // Iterate over each invalid credential set.
+        for (Map<String, String> testCase : invalidCases) {
+            String email = testCase.get("email");
+            String password = testCase.get("password");
+
+            // Populate the login form with invalid credentials.
+            loginPage.setEmail(email);
+            loginPage.setPassword(password);
+
+            // Submit the login form.
+            loginPage.clickSubmit();
+            LOG.info("Attempting login with username: '{}' and password: '{}'", email, password);
+
+            // Wait until the error message element is visible.
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("error")));
+
+            // Retrieve the displayed error message.
+            String actualError = loginPage.getMessageText();
+
+            // Store the expected and actual error messages.
+            actualErrors.add(actualError);
+
+            // Clear the input fields (assumes your loginPage has these methods) to prepare for the next test case.
+            loginPage.clearEmail();
+            loginPage.clearPassword();
+        }
+
+        // Store the lists in ScenarioContext for verification in the @Then step.
+        ScenarioContext.setScenarioContext(ContextKey.NEGATIVE_ACTUAL_ERRORS, actualErrors);
+    }
+
+    @Then("the system displays an error message for each set of credentials")
+    public void verifyErrorMessages(DataTable dataTable) {
+        List<Map<String, String>> messages = dataTable.asMaps(String.class, String.class);
+        // Retrieve stored expected and actual error messages.
+        List<String> expectedErrors = new ArrayList<>();
+        List<String> actualErrors = ScenarioContext.getScenarioContext(ContextKey.NEGATIVE_ACTUAL_ERRORS);
+
+        // Iterate over each error message
+        for (Map<String, String> testCase : messages) {
+            expectedErrors.add(testCase.get("expected_error_message"));
+        }
+        Assert.assertEquals("Error message mismatch for credential set " , expectedErrors, actualErrors);
+        LOG.info("All invalid login attempts have been verified for correct error messages.");
     }
 }
