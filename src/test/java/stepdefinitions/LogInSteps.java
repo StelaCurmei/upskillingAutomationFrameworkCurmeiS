@@ -106,10 +106,8 @@ public class LogInSteps {
     }
 
     // -------------------------------------------------
-    // Negative Scenario Steps (Refactored)
+    // Negative Scenario Steps
     // -------------------------------------------------
-
-    // Negative Scenario Steps (Refactored to clear fields)
 
     @When("the user attempts to log in with invalid credentials:")
     public void attemptInvalidLogin(DataTable dataTable) {
@@ -117,7 +115,6 @@ public class LogInSteps {
         List<Map<String, String>> invalidCases = dataTable.asMaps(String.class, String.class);
 
         // Prepare lists to store expected and actual error messages.
-        //List<String> expectedErrors = new ArrayList<>();
         List<String> actualErrors = new ArrayList<>();
 
         // Create a WebDriverWait instance with a suitable timeout.
@@ -127,7 +124,6 @@ public class LogInSteps {
         for (Map<String, String> testCase : invalidCases) {
             String email = testCase.get("email");
             String password = testCase.get("password");
-            //String expectedError = testCase.get("expected_error_message");
 
             // Populate the login form with invalid credentials.
             loginPage.setEmail(email);

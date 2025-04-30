@@ -13,12 +13,15 @@ Feature: Login
 
   @run
   @Ui
-  Scenario: Verify a user cannot log in with invalid data using a data table
+  Scenario: Verify a user cannot log in with invalid data
     When the user attempts to log in with invalid credentials:
       | email                       | password             |
       | om2345ag@ef345il.zdsm       | I*Z8QY7I!Yz63Vs      |
       | alomer.haag@gmail.comidUser | *Z8QYcdftYss         |
       | er.haag@g ail.User          | I*Z8QYcfvgh7I!Yz63Vs |
+      |                             |                      |
+      | er.haag@g ail.User          |                      |
+      |                             | I*Z8QY7I!Yz63Vs      |
     Then the system displays an error message for each set of credentials
       | expected_error_message         |
       | Incorrect username or password |
