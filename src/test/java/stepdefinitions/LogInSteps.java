@@ -49,7 +49,7 @@ public class LogInSteps {
     }
 
     // -------------------------------------------------
-    // Positive Scenario Steps (unchanged)
+    // Positive Scenario Steps
     // -------------------------------------------------
 
     @And("a new user is signed up")
