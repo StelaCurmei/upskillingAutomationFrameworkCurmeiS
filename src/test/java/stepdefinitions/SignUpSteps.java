@@ -1,77 +1,54 @@
 package stepdefinitions;
 
 import configreader.ConfigReader;
+import context.ContextKey;
+import context.ScenarioContext;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import managers.DataGeneratorManager;
-import managers.DriverManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import pageobjects.ContactListPage;
-import pageobjects.LogInPage;
 import pageobjects.SignUpPage;
-import utils.NavigationHelper;
+import utils.CommonActions;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class SignUpSteps {
-
     private static final Logger LOG = LogManager.getLogger(SignUpSteps.class);
+    private static final int TIMEOUT = 10;
 
-    // Initialize WebDriver and other utilities.
-    private utils.CommonActions commonActions;
-    private WebDriver driver = DriverManager.getDriver();
-    private LogInPage loginPage;
-    private ConfigReader configReader = new ConfigReader();
-    private final LogInPage logInPage = new LogInPage(driver);
-    private SignUpPage signUpPage = new SignUpPage(driver);
-    private ContactListPage contactListPage = new ContactListPage(driver);
-    private final NavigationHelper navigationHelper = new NavigationHelper(driver);
+    private final WebDriver     driver;
+    private final WebDriverWait wait;
+    private final ConfigReader  config;
+    private final SignUpPage    signUpPage;
 
     public SignUpSteps() {
-        // Instantiate our helper that sets up the driver and configuration.
-        commonActions = new utils.CommonActions();
-        driver = commonActions.getDriver();
-        configReader = commonActions.getConfigReader();
-
-        // Initialize page objects using the driver from CommonActions.
-        loginPage = new LogInPage(driver);
-        signUpPage = new SignUpPage(driver);
-        contactListPage = new ContactListPage(driver);
+        CommonActions common = new CommonActions();
+        this.driver     = common.getDriver();
+        this.wait       = new WebDriverWait(driver, Duration.ofSeconds(TIMEOUT));
+        this.config     = common.getConfigReader();
+        this.signUpPage = new SignUpPage(driver);
     }
 
-    @When("the user clicks the Sign Up button")
-    public void clickSignUpButton() {
-        // Click the SignUp button on the login page.
-        logInPage.clickSignUp();
-
-        // Verify the redirect (using a helper method and a key from configuration).
-        navigationHelper.verifyRedirect("addUserUrl");
-
-        String currentUrl = driver.getCurrentUrl();
-        LOG.info("Current URL after clicking Sign Up: {}", currentUrl);
-    }
+    /* ─────────── Positive Scenario ─────────── */
 
     @When("the user enters valid sign up data")
     public void enterValidSignUpData() {
-        // Generate random test data for signup.
-        String firstName = DataGeneratorManager.getRandomFirstName();
-        String lastName = DataGeneratorManager.getRandomLastName();
-        String email = DataGeneratorManager.getRandomEmail();
-        String password = DataGeneratorManager.getRandomPassword();
-
-        LOG.info("Entering sign up data: {} {} {} {}", firstName, lastName, email, password);
-
-        // Fill in the sign-up form.
-        signUpPage.setFirstName(firstName);
-        signUpPage.setLastName(lastName);
-        signUpPage.setEmail(email);
-        signUpPage.setPassword(password);
+        signUpPage.setFirstName(DataGeneratorManager.getRandomFirstName());
+        signUpPage.setLastName (DataGeneratorManager.getRandomLastName());
+        signUpPage.setEmail    (DataGeneratorManager.getRandomEmail());
+        signUpPage.setPassword (DataGeneratorManager.getRandomPassword());
     }
 
     @And("the user clicks the Submit button")
@@ -81,19 +58,76 @@ public class SignUpSteps {
 
     @Then("the user is redirected to the Contact List page")
     public void verifyRedirectionToContactListPage() {
-        String expectedUrl = configReader.getProperty("contactListUrl");
-        if (expectedUrl == null || expectedUrl.isEmpty()) {
-            LOG.error("Expected contact list URL is missing in the configuration.");
-            throw new IllegalArgumentException("Contact list URL is missing in the configuration file.");
+        String expected = config.getProperty("contactListUrl");
+        wait.until(ExpectedConditions.urlToBe(expected));
+        Assert.assertEquals("Redirect after signup failed", expected, driver.getCurrentUrl());
+    }
+
+    /* ─────────── Negative Scenario ─────────── */
+
+    @When("the user attempts to sign in with invalid data:")
+    public void attemptInvalidSignUp(DataTable table) {
+        List<List<String>> allFragments = table.asMaps(String.class, String.class)
+                .stream()
+                .map(HashMap::new)
+                .map(this::submitParseAndReset)
+                .collect(Collectors.toList());
+
+        ScenarioContext.setScenarioContext(ContextKey.NEGATIVE_EXPECTED_ERRORS, allFragments);
+    }
+
+    @Then("the system displays an error message for each set of invalid data")
+    public void verifySignUpErrorMessages(DataTable expectedTable) {
+        // Retrieve and cast just this once
+        Object raw = ScenarioContext.getScenarioContext(ContextKey.NEGATIVE_EXPECTED_ERRORS);
+        @SuppressWarnings("unchecked")
+        List<List<String>> actual = (List<List<String>>) raw;
+
+        List<List<String>> expected = expectedTable.asMaps(String.class, String.class)
+                .stream()
+                .map(m -> parseErrorMessages(m.get("expected_error_message")))
+                .collect(Collectors.toList());
+
+        Assert.assertEquals("Row count mismatch", expected.size(), actual.size());
+        for (int i = 0; i < expected.size(); i++) {
+            Assert.assertEquals(
+                    "Mismatch on row #" + (i + 1),
+                    expected.get(i),
+                    actual.get(i)
+            );
         }
+    }
 
-        // Wait until redirection to the expected URL completes.
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        wait.until(ExpectedConditions.urlToBe(expectedUrl));
+    /* ─────────── Helper methods ─────────── */
 
-        String currentUrl = driver.getCurrentUrl();
-        LOG.info("Current URL: {}", currentUrl);
-        Assert.assertEquals("Redirection failed: the current URL does not match the expected URL.", expectedUrl, currentUrl);
-        LOG.info("Test Passed: User successfully redirected to: {}", currentUrl);
+    private List<String> submitParseAndReset(Map<String, String> row) {
+        row.replaceAll((k, v) -> v == null ? "" : v);
+
+        signUpPage.setFirstName(row.get("firstname"));
+        signUpPage.setLastName (row.get("lastname"));
+        signUpPage.setEmail    (row.get("email"));
+        signUpPage.setPassword (row.get("password"));
+        signUpPage.clickSubmit();
+
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("error")));
+        String banner = signUpPage.getSignUpErrorMessage();
+        LOG.info("Captured banner: {}", banner);
+
+        // ─── Option 1: Full refresh ───
+        driver.navigate().refresh();
+        wait.until(ExpectedConditions.attributeToBe(By.id("firstName"), "value", ""));
+
+        // ─── Option 2: Clear form + hide banner ───
+//        signUpPage.clearForm();
+//        wait.until(ExpectedConditions.attributeToBe(By.id("firstName"), "value", ""));
+//        ((JavascriptExecutor)driver)
+//            .executeScript("document.getElementById('error').style.display='none'");
+
+        return parseErrorMessages(banner);
+    }
+
+    private List<String> parseErrorMessages(String banner) {
+        String body = banner.replaceFirst("^[^:]+:\\s*", "");
+        return List.of(body.split(", (?=[a-zA-Z]+:)"));
     }
 }

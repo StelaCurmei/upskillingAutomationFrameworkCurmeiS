@@ -1,5 +1,6 @@
 package pageobjects;
 
+import io.cucumber.datatable.DataTable;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -35,6 +36,10 @@ public class SignUpPage {
         this.firstName.sendKeys(firstNameInput); // Entering firstName into firstName text field
     }
 
+    public void clearFirstName() {
+        this.firstName.clear();
+    }
+
     public WebElement getLastName() {
         return lastName;
     }
@@ -43,12 +48,23 @@ public class SignUpPage {
         this.lastName.sendKeys(lastNameInput);  // Entering lastName into lastName text field
     }
 
+    public void clearLastName() {
+        this.lastName.clear();
+    }
+
     public WebElement getEmail() {
         return email;
     }
 
+    @FindBy(id = "error")
+    private WebElement error;
+
     public void setEmail(String emailInput) {
         this.email.sendKeys(emailInput); // Entering email into email text field
+    }
+
+    public void clearEmail() {
+        this.email.clear();
     }
 
     public WebElement getPassword() {
@@ -59,12 +75,31 @@ public class SignUpPage {
         this.password.sendKeys(passwordInput); // Setting password
     }
 
+    public void clearPassword() {
+        this.password.clear();
+    }
+
     public WebElement getSubmit() {
         return submit;
     }
 
     public void clickSubmit() {
         this.submit.click();  // Clicking on submit button
+    }
+
+    public WebElement getSignUpError() {
+        return error;
+    }
+
+    public String getSignUpErrorMessage() {
+        return error.getText();
+    }
+
+    public void clearForm() {
+        clearFirstName();
+        clearLastName();
+        clearEmail();
+        clearPassword();
     }
 
     public void signUp(String firstName, String lastName, String email, String password) {

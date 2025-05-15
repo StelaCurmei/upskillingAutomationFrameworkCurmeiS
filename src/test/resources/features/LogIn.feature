@@ -11,7 +11,7 @@ Feature: Login
     And the user clicks on the submit button
     Then the user is redirected to contact list page
 
-  @run
+ # @run
   @Ui
   Scenario: Verify a user cannot log in with invalid data
     When the user attempts to log in with invalid credentials:
