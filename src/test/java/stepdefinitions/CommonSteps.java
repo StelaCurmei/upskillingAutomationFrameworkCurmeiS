@@ -3,7 +3,7 @@ package stepdefinitions;
 import utils.ConfigReader;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
-import managers.DriverManager;
+import utils.DriverManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.InvalidArgumentException;

@@ -10,8 +10,8 @@ import org.apache.logging.log4j.ThreadContext;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static managers.DriverManager.getDriver;
-import static managers.DriverManager.quitDriver;
+import static utils.DriverManager.getDriver;
+import static utils.DriverManager.quitDriver;
 
 public class ExecutionHooks {
     private static final Logger LOG = LogManager.getLogger(ExecutionHooks.class);
