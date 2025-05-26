@@ -1,6 +1,6 @@
 package stepdefinitions;
 
-import configreader.ConfigReader;
+import utils.ConfigReader;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import managers.DriverManager;

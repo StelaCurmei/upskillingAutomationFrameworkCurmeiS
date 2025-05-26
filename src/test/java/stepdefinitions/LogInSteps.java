@@ -1,13 +1,13 @@
 package stepdefinitions;
 
-import configreader.ConfigReader;
+import utils.ConfigReader;
 import context.ContextKey;
 import context.ScenarioContext;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import managers.DataGeneratorManager;
+import utils.DataGeneratorManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
