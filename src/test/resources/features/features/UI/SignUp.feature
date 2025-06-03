@@ -11,7 +11,7 @@ Feature: SignUp
     Then the user is redirected to the Contact List page
 
 
-  @run
+ # @run
   @Ui
   Scenario: Verify a new user cannot sign up with invalid data
     When the user attempts to sign in with invalid data:

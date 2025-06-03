@@ -1,4 +1,4 @@
-package stepdefinitions;
+package stepdefinitions.UI;
 
 import utils.ConfigReader;
 import context.ContextKey;
@@ -30,18 +30,17 @@ public class SignUpSteps {
 
     private final WebDriver     driver;
     private final WebDriverWait wait;
-    private final ConfigReader  config;
     private final SignUpPage    signUpPage;
 
     public SignUpSteps() {
         CommonActions common = new CommonActions();
         this.driver     = common.getDriver();
         this.wait       = new WebDriverWait(driver, Duration.ofSeconds(TIMEOUT));
-        this.config     = common.getConfigReader();
+        //this.config     = common.getConfigReader();
         this.signUpPage = new SignUpPage(driver);
     }
 
-    /* ─────────── Positive Scenario ─────────── */
+    // Positive Scenario
 
     @When("the user enters valid sign up data")
     public void enterValidSignUpData() {
@@ -58,12 +57,12 @@ public class SignUpSteps {
 
     @Then("the user is redirected to the Contact List page")
     public void verifyRedirectionToContactListPage() {
-        String expected = config.getProperty("contactListUrl");
+        String expected = ConfigReader.getProperty("contactListUrl");
         wait.until(ExpectedConditions.urlToBe(expected));
         Assert.assertEquals("Redirect after signup failed", expected, driver.getCurrentUrl());
     }
 
-    /* ─────────── Negative Scenario ─────────── */
+    // Negative Scenario
 
     @When("the user attempts to sign in with invalid data:")
     public void attemptInvalidSignUp(DataTable table) {
@@ -78,7 +77,6 @@ public class SignUpSteps {
 
     @Then("the system displays an error message for each set of invalid data")
     public void verifySignUpErrorMessages(DataTable expectedTable) {
-        // Retrieve and cast just this once
         Object raw = ScenarioContext.getScenarioContext(ContextKey.NEGATIVE_EXPECTED_ERRORS);
         @SuppressWarnings("unchecked")
         List<List<String>> actual = (List<List<String>>) raw;
@@ -98,7 +96,7 @@ public class SignUpSteps {
         }
     }
 
-    /* ─────────── Helper methods ─────────── */
+    // Helpers
 
     private List<String> submitParseAndReset(Map<String, String> row) {
         row.replaceAll((k, v) -> v == null ? "" : v);
@@ -113,16 +111,9 @@ public class SignUpSteps {
         String banner = signUpPage.getSignUpErrorMessage();
         LOG.info("Captured banner: {}", banner);
 
-        // ─── Option 1: Full refresh ───
+        // Refresh
         driver.navigate().refresh();
         wait.until(ExpectedConditions.attributeToBe(By.id("firstName"), "value", ""));
-
-        // ─── Option 2: Clear form + hide banner ───
-//        signUpPage.clearForm();
-//        wait.until(ExpectedConditions.attributeToBe(By.id("firstName"), "value", ""));
-//        ((JavascriptExecutor)driver)
-//            .executeScript("document.getElementById('error').style.display='none'");
-
         return parseErrorMessages(banner);
     }
 

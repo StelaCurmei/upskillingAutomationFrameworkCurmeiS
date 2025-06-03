@@ -1,23 +1,48 @@
 package utils;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class ConfigReader {
-    private final Properties PROPERTIES;
+public final class ConfigReader {
+    private static final String CONFIG_FILE = "config.properties";
+    private static final Properties PROPS = new Properties();
 
-    public ConfigReader() {
-        PROPERTIES = new Properties();
-        try (InputStream input = new FileInputStream("config.properties")) {
-            PROPERTIES.load(input);
-        } catch (IOException ex) {
-            ex.printStackTrace();
+    // static init: load from classpath
+    static {
+        try (InputStream is = ConfigReader.class
+                .getClassLoader()
+                .getResourceAsStream(CONFIG_FILE)) {
+
+            if (is == null) {
+                throw new RuntimeException(
+                        CONFIG_FILE + " not found on classpath"
+                );
+            }
+
+            PROPS.load(is);
+
+        } catch (IOException e) {
+            // stop everything early if config can’t be read
+            throw new ExceptionInInitializerError(
+                    "Failed to load " + CONFIG_FILE + ": " + e.getMessage()
+            );
         }
     }
 
-    public String getProperty(String key) {
-        return PROPERTIES.getProperty(key);
+    // no instantiation
+    public ConfigReader() {
+    }
+
+    // Get a property value, or null if it doesn't exist.
+
+    public static String getProperty(String key) {
+        return PROPS.getProperty(key);
+    }
+
+    // Get a property value, or return defaultValue if it doesn't exist.
+
+    public static String getProperty(String key, String defaultValue) {
+        return PROPS.getProperty(key, defaultValue);
     }
 }
