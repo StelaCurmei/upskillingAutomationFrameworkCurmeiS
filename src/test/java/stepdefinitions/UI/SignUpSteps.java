@@ -7,7 +7,7 @@ import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import utils.DataGeneratorManager;
+import utils.DataGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
@@ -44,10 +44,10 @@ public class SignUpSteps {
 
     @When("the user enters valid sign up data")
     public void enterValidSignUpData() {
-        signUpPage.setFirstName(DataGeneratorManager.getRandomFirstName());
-        signUpPage.setLastName (DataGeneratorManager.getRandomLastName());
-        signUpPage.setEmail    (DataGeneratorManager.getRandomEmail());
-        signUpPage.setPassword (DataGeneratorManager.getRandomPassword());
+        signUpPage.setFirstName(DataGenerator.getRandomFirstName());
+        signUpPage.setLastName (DataGenerator.getRandomLastName());
+        signUpPage.setEmail    (DataGenerator.getRandomEmail());
+        signUpPage.setPassword (DataGenerator.getRandomPassword());
     }
 
     @And("the user clicks the Submit button")

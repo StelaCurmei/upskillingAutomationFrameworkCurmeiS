@@ -1,36 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
-        <!-- Maven sets this to 'target' when you run via mvn; otherwise we default to 'target' -->
+        <!-- project.build.directory defaults to 'target' when run via Maven -->
         <Property name="buildDir">${sys:project.build.directory:-target}</Property>
         <Property name="logsDir">${buildDir}/logs</Property>
     </Properties>
 
     <Appenders>
-        <!-- Console Logger -->
+        <!-- 1) Console for quick feedback -->
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout
-                    pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
 
-        <!-- Flat file for per-test-suite overview -->
-        <File name="FileLogger"
-              fileName="${logsDir}/${ctx:testName}/test-execution.log"
+        <!-- 2) Flat file for entire test suite, grouped by testTime -->
+        <File name="SuiteLogger"
+              fileName="${logsDir}/${ctx:testTime}/test-execution.log"
               createDirs="true">
-            <PatternLayout
-                    pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </File>
 
-        <!-- Routing appender for individual test-case logs -->
+        <!-- 3) One file per scenario under the same folder -->
         <Routing name="ScenarioLogger">
             <Routes pattern="$${ctx:testName}">
                 <Route>
-                    <File name="PerTestLogger"
+                    <File name="PerScenarioLogger"
                           fileName="${logsDir}/${ctx:testTime}/${ctx:testName}.log"
-                          append="true"
-                          createDirs="true">
-                        <PatternLayout
-                                pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+                          createDirs="true"
+                          append="true">
+                        <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
                     </File>
                 </Route>
             </Routes>
@@ -38,9 +35,22 @@
     </Appenders>
 
     <Loggers>
+        <!-- Enable DEBUG for your API steps and hooks so debug() messages show up -->
+        <Logger name="stepdefinitions.API" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="SuiteLogger"/>
+            <AppenderRef ref="ScenarioLogger"/>
+        </Logger>
+        <Logger name="hooks.ExecutionHooks" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="SuiteLogger"/>
+            <AppenderRef ref="ScenarioLogger"/>
+        </Logger>
+
+        <!-- Root logger for everything else at INFO -->
         <Root level="info">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="FileLogger"/>
+            <AppenderRef ref="SuiteLogger"/>
             <AppenderRef ref="ScenarioLogger"/>
         </Root>
     </Loggers>

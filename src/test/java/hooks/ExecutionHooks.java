@@ -4,90 +4,92 @@ import io.cucumber.java.After;
 import io.cucumber.java.AfterStep;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
-
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
-
-import io.qameta.allure.Allure;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
+import io.qameta.allure.Allure;
+import io.restassured.RestAssured;
+import io.restassured.filter.Filter;
+import utils.BaseApi;
+import utils.ConfigReader;
+import utils.DriverManager;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
-import io.restassured.filter.Filter;
 import java.util.Date;
 
-import static utils.DriverManager.getDriver;
-import static utils.DriverManager.quitDriver;
-import utils.ConfigReader;
-
+/**
+ * Cucumber hooks for API and UI scenarios.
+ * - Sets up ThreadContext for per-scenario logging
+ * - Configures RestAssured filters and attaches HTTP logs
+ * - Manages WebDriver lifecycle and screenshots for UI
+ */
 public class ExecutionHooks {
     private static final Logger LOG = LogManager.getLogger(ExecutionHooks.class);
 
-    // Logger setup before any scenario
     @Before(order = 0)
-    public void setupLogger(Scenario scenario) {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String testName  = scenario.getName().replaceAll("[^a-zA-Z0-9\\-_]", "_");
-        ThreadContext.put("testTime",  timeStamp);
-        ThreadContext.put("testName",  testName);
+    public void beforeScenario(Scenario scenario) {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String safeName = scenario.getName().replaceAll("[^a-zA-Z0-9_-]", "_");
+        ThreadContext.put("testTime", timestamp);
+        ThreadContext.put("testName", safeName);
         LOG.info("=== STARTING SCENARIO: {} ===", scenario.getName());
     }
 
-    // setup before API scenarios
     @Before(order = 1, value = "@api")
-    public void setupRestAssured() {
-        String baseUri = ConfigReader.getProperty("petStore.baseUri");
-        RestAssured.baseURI = baseUri;
-        // log request/response if validation fails
-        RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter());
-        LOG.info("RestAssured configured for API tests. BaseURI={}", baseUri);
+    public void setupApi() {
+        // Configure RestAssured for API tests
+        RestAssured.baseURI = ConfigReader.getProperty("api.baseUrl");
+        LOG.info("Configured RestAssured for API tests. BaseURI={}", RestAssured.baseURI);
     }
 
-    // WebDriver setup before UI scenarios
-    @Before(order = 1, value = "@Ui")
-    public void setUpUi() {
-        getDriver();
-        LOG.info("Opening the browser for UI test...");
+    @AfterStep(order = 1, value = "@api")
+    public void attachApiLogs(Scenario scenario) {
+        String httpLogs = BaseApi.pullLogs();
+        if (!httpLogs.isEmpty()) {
+            scenario.attach(httpLogs, "text/plain", "API Request/Response");
+            LOG.debug("Attached API logs to report");
+        }
     }
 
-    // Screenshot after EVERY STEP - UI scenarios
-    @AfterStep(order = 2, value = "@Ui")
-    public void afterEachStepUi(Scenario scenario) {
-        WebDriver driver = getDriver();
-        if (driver == null) return;
-
-        byte[] png = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
-        scenario.attach(png, "image/png", "Step: " + scenario.getName());
-        Allure.addAttachment("Screenshot - " + scenario.getName(),
-                new ByteArrayInputStream(png));
-        LOG.info("Attached screenshot for UI step in scenario: {}", scenario.getName());
-    }
-
-    // WebDriver teardown after UI scenarios
-    @After(order = 1, value = "@Ui")
-    public void tearDownUi() {
-        quitDriver();
-        LOG.info("Browser closed for UI test.");
-    }
-
-    // cleanup after API scenarios
     @After(order = 0, value = "@api")
-    public void tearDownApi() {
-        RestAssured.replaceFiltersWith(Collections.<Filter>emptyList());
-        LOG.info("RestAssured filters cleared after API test.");
+    public void teardownApi() {
+        // Clear filters to avoid bleed between scenarios
+        BaseApi.clearFilters();
+        LOG.info("Cleared RestAssured filters after API test.");
     }
 
-    // Logger cleanup after any scenario
-    @After(order =  -1)
-    public void clearLogger(Scenario scenario) {
+    @Before(order = 1, value = "@Ui")
+    public void setupUi() {
+        DriverManager.getDriver();
+        LOG.info("Launched browser for UI scenario");
+    }
+
+    @AfterStep(order = 2, value = "@Ui")
+    public void afterEachUiStep(Scenario scenario) {
+        WebDriver driver = DriverManager.getDriver();
+        if (driver != null) {
+            byte[] screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
+            scenario.attach(screenshot, "image/png", "UI Step Screenshot");
+            Allure.addAttachment("Screenshot - " + scenario.getName(),
+                    new ByteArrayInputStream(screenshot));
+            LOG.info("Captured UI screenshot for scenario: {}", scenario.getName());
+        }
+    }
+
+    @After(order = 1, value = "@Ui")
+    public void teardownUi() {
+        DriverManager.quitDriver();
+        LOG.info("Closed browser after UI scenario");
+    }
+
+    @After(order = -1)
+    public void afterScenario(Scenario scenario) {
         LOG.info("=== ENDING SCENARIO: {} ===", scenario.getName());
         ThreadContext.clearAll();
     }

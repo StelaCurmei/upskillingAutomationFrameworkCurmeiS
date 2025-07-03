@@ -3,7 +3,7 @@
         xmlns="http://maven.apache.org/POM/4.0.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+                        http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>online.upskillingtests</groupId>
@@ -23,37 +23,35 @@
         <junit.version>4.13.2</junit.version>
         <log4j.version>2.24.3</log4j.version>
         <jackson.version>2.18.3</jackson.version>
+        <rest-assured.version>5.5.1</rest-assured.version>
 
         <!-- Maven plugin versions -->
         <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
         <maven-cucumber-reporting.version>4.5.0</maven-cucumber-reporting.version>
         <maven-jar-plugin.version>3.4.1</maven-jar-plugin.version>
+        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
 
         <!-- Allure / AspectJ -->
         <allure.version>2.28.1</allure.version>
         <allure.maven.plugin.version>2.15.2</allure.maven.plugin.version>
         <aspectjweaver.version>1.9.23</aspectjweaver.version>
-        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
-
-        <!-- Rest Assured -->
-        <rest-assured.version>5.5.1</rest-assured.version>
     </properties>
 
-    <!-- Allure BOM (helps to specify one version instead of versions for each adapter) -->
+    <!-- Allure BOM -->
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>io.qameta.allure</groupId>
                 <artifactId>allure-bom</artifactId>
                 <version>${allure.version}</version>
-                <scope>import</scope>
                 <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-        <!-- Selenium + Datafaker -->
+        <!-- Selenium & DataFaker -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
@@ -91,7 +89,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Logging -->
+        <!-- Log4j2 -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -115,7 +113,7 @@
             <version>${jackson.version}</version>
         </dependency>
 
-        <!-- Allure adapters (versions pulled from the BOM) -->
+        <!-- Allure adapters -->
         <dependency>
             <groupId>io.qameta.allure</groupId>
             <artifactId>allure-cucumber7-jvm</artifactId>
@@ -134,18 +132,43 @@
             <version>${rest-assured.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>json-schema-validator</artifactId>
+            <version>${rest-assured.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
-        <plugins>
+        <!-- Bring in both src/test/resources and your top-level resources/ folder -->
+        <testResources>
+            <!-- default -->
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>false</filtering>
+            </testResource>
+            <!-- your existing project-root resources -->
+            <testResource>
+                <directory>${project.basedir}/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>config.properties</include>
+                    <include>env.properties</include>
+                    <include>allure.properties</include>
+                    <include>log4j2.xml</include>
+                </includes>
+            </testResource>
+        </testResources>
 
-            <!-- Copy custom allure.properties to results folder -->
+        <plugins>
+            <!-- copy allure.properties into target/allure-results -->
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>${maven-resources-plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>copy-allure-properties</id>
+                        <id>copy-allure-props</id>
                         <phase>process-test-resources</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -154,7 +177,7 @@
                             <outputDirectory>${project.build.directory}/allure-results</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${project.basedir}</directory>
+                                    <directory>${project.basedir}/resources</directory>
                                     <includes>
                                         <include>allure.properties</include>
                                     </includes>
@@ -165,7 +188,7 @@
                 </executions>
             </plugin>
 
-            <!-- Run tests under AspectJ so Allure-JUnit4 aspects are applied -->
+            <!-- Surefire w/ AspectJ for Allure-JUnit4 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -181,28 +204,25 @@
                         <groupId>org.aspectj</groupId>
                         <artifactId>aspectjweaver</artifactId>
                         <version>${aspectjweaver.version}</version>
-                        <scope>runtime</scope>
                     </dependency>
                 </dependencies>
             </plugin>
 
-            <!-- Generate the Allure HTML report -->
+            <!-- Allure report generation -->
             <plugin>
                 <groupId>io.qameta.allure</groupId>
                 <artifactId>allure-maven</artifactId>
                 <version>${allure.maven.plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>generate-allure-report</id>
+                        <id>allure-report</id>
                         <phase>verify</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
+                        <goals><goal>report</goal></goals>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- Build “custom” JAR -->
+            <!-- Custom JAR config (unchanged) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -215,50 +235,31 @@
                     <execution>
                         <id>custom-jar</id>
                         <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>custom</classifier>
-                        </configuration>
+                        <goals><goal>jar</goal></goals>
+                        <configuration><classifier>custom</classifier></configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- Generate Cucumber advanced report at `verify` -->
+            <!-- Cucumber advanced reporting -->
             <plugin>
                 <groupId>net.masterthought</groupId>
                 <artifactId>maven-cucumber-reporting</artifactId>
                 <version>${maven-cucumber-reporting.version}</version>
                 <executions>
                     <execution>
-                        <id>generate-cucumber-report</id>
+                        <id>cucumber-report</id>
                         <phase>verify</phase>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
+                        <goals><goal>generate</goal></goals>
                     </execution>
                 </executions>
                 <configuration>
-                    <outputDirectory>${project.build.directory}/cucumber-report</outputDirectory>
+                    <outputDirectory>${project.build.directory}/cucumber-reports</outputDirectory>
                     <jsonFiles>
-                        <param>${project.build.directory}/cucumber-report/cucumber-report.json</param>
+                        <jsonFile>${project.build.directory}/cucumber-reports/cucumber-report.json</jsonFile>
                     </jsonFiles>
                 </configuration>
             </plugin>
-
         </plugins>
-
-        <testResources>
-            <testResource>
-                <!-- point at the project root -->
-                <directory>${basedir}</directory>
-                <includes>
-                    <!-- copy just config.properties -->
-                    <include>config.properties</include>
-                </includes>
-            </testResource>
-        </testResources>
     </build>
-
 </project>

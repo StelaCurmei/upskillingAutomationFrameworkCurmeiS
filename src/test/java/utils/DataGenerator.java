@@ -4,7 +4,7 @@ import net.datafaker.Faker;
 
 import java.util.regex.Pattern;
 
-public class DataGeneratorManager {
+public class DataGenerator {
     private static final Faker faker = new Faker();
 
     public static String getRandomEmail() {

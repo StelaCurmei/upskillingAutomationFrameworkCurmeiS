@@ -18,7 +18,7 @@ import pageobjects.LogInPage;
 import pageobjects.SignUpPage;
 import utils.CommonActions;
 import utils.ConfigReader;
-import utils.DataGeneratorManager;
+import utils.DataGenerator;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -31,7 +31,6 @@ public class LogInSteps {
 
     private final WebDriver driver;
     private final WebDriverWait wait;
-    //private final ConfigReader config;
     private final LogInPage loginPage;
     private final SignUpPage signUpPage;
     private final ContactListPage contactListPage;
@@ -39,7 +38,6 @@ public class LogInSteps {
     public LogInSteps() {
         CommonActions actions = new CommonActions();
         this.driver = actions.getDriver();
-        //this.config = actions.getConfigReader();
         this.wait = new WebDriverWait(driver, TIMEOUT);
 
         this.loginPage = new LogInPage(driver);
@@ -67,10 +65,10 @@ public class LogInSteps {
     public void signUp() {
         loginPage.clickSignUp();
 
-        String firstName = DataGeneratorManager.getRandomFirstName();
-        String lastName = DataGeneratorManager.getRandomLastName();
-        String email = DataGeneratorManager.getRandomEmail();
-        String password = DataGeneratorManager.getRandomPassword();
+        String firstName = DataGenerator.getRandomFirstName();
+        String lastName = DataGenerator.getRandomLastName();
+        String email = DataGenerator.getRandomEmail();
+        String password = DataGenerator.getRandomPassword();
 
         LOG.info("Signing up new user: {} {}", firstName, lastName);
         signUpPage.signUp(firstName, lastName, email, password);
