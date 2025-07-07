@@ -1,29 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
+    <Properties>
+        <!-- project.build.directory defaults to 'target' when run via Maven -->
+        <Property name="buildDir">${sys:project.build.directory:-target}</Property>
+        <Property name="logsDir">${buildDir}/logs</Property>
+    </Properties>
+
     <Appenders>
-        <!-- Console Logger -->
+        <!-- 1) Console for quick feedback -->
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
 
-        <!-- File Logger with dynamic folder for each test case -->
-        <File name="FileLogger" fileName="logs/${ctx:testName}/test-execution.log">
+        <!-- 2) Flat file for entire test suite, grouped by testTime -->
+        <File name="SuiteLogger"
+              fileName="${logsDir}/${ctx:testTime}/test-execution.log"
+              createDirs="true">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </File>
+
+        <!-- 3) One file per scenario under the same folder -->
         <Routing name="ScenarioLogger">
             <Routes pattern="$${ctx:testName}">
                 <Route>
-                    <File name="Loggers" fileName="logs/${ctx:testTime}/${ctx:testName}.log" append="true" createDirs="true">
+                    <File name="PerScenarioLogger"
+                          fileName="${logsDir}/${ctx:testTime}/${ctx:testName}.log"
+                          createDirs="true"
+                          append="true">
                         <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
                     </File>
                 </Route>
             </Routes>
         </Routing>
     </Appenders>
+
     <Loggers>
+        <!-- Enable DEBUG for your API steps and hooks so debug() messages show up -->
+        <Logger name="stepdefinitions.API" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="SuiteLogger"/>
+            <AppenderRef ref="ScenarioLogger"/>
+        </Logger>
+        <Logger name="hooks.ExecutionHooks" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="SuiteLogger"/>
+            <AppenderRef ref="ScenarioLogger"/>
+        </Logger>
+
+        <!-- Root logger for everything else at INFO -->
         <Root level="info">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="FileLogger"/>
+            <AppenderRef ref="SuiteLogger"/>
             <AppenderRef ref="ScenarioLogger"/>
         </Root>
     </Loggers>
