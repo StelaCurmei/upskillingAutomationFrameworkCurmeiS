@@ -5,7 +5,7 @@ Feature: PetStore CRUD operations
     Given I set the API base URL to the PetStore service
 
   Scenario: Create a new Pet
-    When I POST a new Pet with name "Fido" and status "available"
+    When I create a new Pet with name "Fido" and status "available"
     Then the response status code should be 200
     And the response body should contain a pet object with name "Fido" and status "available"
 
@@ -16,13 +16,13 @@ Feature: PetStore CRUD operations
     And the response body should contain a pet object with id matching the created id
 
   Scenario: Update an existing Pet
-    Given there is an existing pet with id 1234
-    When I PUT to update that pet’s status to "sold"
+    Given there is an existing pet with id 1234, name "Rex", and status "available"
+    When I update that pet’s status to "sold"
     Then the response status code should be 200
     And the response body should show status "sold"
 
   Scenario: Delete a Pet
-    Given there is an existing pet with id 1234
+    Given there is an existing pet with id 1234, name "Rex", and status "available"
     When I DELETE that pet by its id
     Then the response status code should be 200
     And a subsequent GET by that id returns 404
