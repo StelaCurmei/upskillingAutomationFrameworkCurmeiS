@@ -25,14 +25,13 @@ public class PetApiSteps {
     }
 
     //—— Create ——
-    @When("I POST a new Pet with name {string} and status {string}")
+    @When("I create a new Pet with name {string} and status {string}")
     public void createNewPet(String name, String status) {
         LOG.info("Create scenario: building Pet(name={}, status={})", name, status);
         Pet p = buildPet(name, status);
 
-        LOG.debug("About to POST /pet with payload: {}", p);
         Response r = PetStoreClient.createPet(p);
-        LOG.debug("Received status {} and body: {}", r.getStatusCode(), r.getBody().asString());
+        LOG.debug("POST /pet response: {} - {}", r.getStatusCode(), r.getBody().asString());
 
         ScenarioContext.setScenarioContext(ContextKey.LAST_RESPONSE, r);
         ScenarioContext.setScenarioContext(ContextKey.CREATED_PET, r.as(Pet.class));
@@ -40,26 +39,25 @@ public class PetApiSteps {
 
     @Then("the response status code should be {int}")
     public void assertStatusCode(int expected) {
-        LOG.info("Verifying status code is {}", expected);
         Response r = lastResponse();
+        LOG.info("Asserting status code == {}", expected);
         assertEquals("Status code mismatch", expected, r.getStatusCode());
     }
 
-    @Then("the response body should contain a pet object with name {string} and status {string}")
+    @And("the response body should contain a pet object with name {string} and status {string}")
     public void assertBodyNameAndStatus(String name, String status) {
-        LOG.info("Verifying returned pet name/status == {}/{}", name, status);
         Pet p = lastPet();
+        LOG.info("Verifying name={} and status={}", name, status);
         assertEquals("Name mismatch", name, p.getName());
         assertEquals("Status mismatch", status, p.getStatus());
     }
 
     //—— Read ——
-    @Given("a pet has been created with name {string} and status {string}")
+    @And("a pet has been created with name {string} and status {string}")
     public void seedPet(String name, String status) {
-        LOG.info("Get scenario: seeding pet(name={}, status={})", name, status);
         Pet p = buildPet(name, status);
         Response r = PetStoreClient.createPet(p);
-        LOG.debug("Seed POST returned {}, body: {}", r.getStatusCode(), r.getBody().asString());
+        LOG.debug("Seeded pet creation response: {} - {}", r.getStatusCode(), r.getBody().asString());
 
         ScenarioContext.setScenarioContext(ContextKey.LAST_RESPONSE, r);
         ScenarioContext.setScenarioContext(ContextKey.CREATED_PET, r.as(Pet.class));
@@ -68,49 +66,50 @@ public class PetApiSteps {
     @When("I GET that pet by its id")
     public void getById() {
         long id = lastPet().getId();
-        LOG.info("GET scenario: fetching pet by id={}", id);
+        LOG.info("Fetching pet with id={}", id);
         Response r = PetStoreClient.getPet(id);
-        LOG.debug("GET returned status {} and body: {}", r.getStatusCode(), r.getBody().asString());
+        LOG.debug("GET /pet response: {} - {}", r.getStatusCode(), r.getBody().asString());
 
         ScenarioContext.setScenarioContext(ContextKey.LAST_RESPONSE, r);
     }
 
     @Then("the response body should contain a pet object with id matching the created id")
     public void assertIdMatches() {
-        LOG.info("Verifying fetched pet ID matches created");
         Pet created = lastPet();
         Pet fetched = lastResponse().as(Pet.class);
+        LOG.info("Verifying ID match: {} == {}", created.getId(), fetched.getId());
         assertEquals("ID mismatch", created.getId(), fetched.getId());
     }
 
     //—— Update ——
-    @Given("there is an existing pet with id {int}")
-    public void ensurePetExistsById(int id) {
-        LOG.info("Update scenario: upserting pet id={}", id);
-        Pet p = buildPet("auto", "available");
+    @And("there is an existing pet with id {int}, name {string}, and status {string}")
+    public void ensurePetExistsByIdNameStatus(int id, String name, String status) {
+        LOG.info("Creating/updating pet with id={}, name={}, status={}", id, name, status);
+        Pet p = buildPet(name, status);
         p.setId(id);
         Response r = PetStoreClient.updatePet(p);
-        LOG.debug("Upsert PUT returned {}, body: {}", r.getStatusCode(), r.getBody().asString());
+        LOG.debug("PUT /pet response: {} - {}", r.getStatusCode(), r.getBody().asString());
 
         ScenarioContext.setScenarioContext(ContextKey.LAST_RESPONSE, r);
         ScenarioContext.setScenarioContext(ContextKey.CREATED_PET, r.as(Pet.class));
     }
 
-    @When("I PUT to update that pet’s status to {string}")
+    @When("I update that pet’s status to {string}")
     public void updatePetStatus(String status) {
-        LOG.info("Updating pet status to '{}'", status);
         Pet p = lastPet();
         p.setStatus(status);
+        LOG.info("Updating status of pet id={} to {}", p.getId(), status);
         Response r = PetStoreClient.updatePet(p);
-        LOG.debug("Update PUT returned {}, body: {}", r.getStatusCode(), r.getBody().asString());
+        LOG.debug("PUT update response: {} - {}", r.getStatusCode(), r.getBody().asString());
 
         ScenarioContext.setScenarioContext(ContextKey.LAST_RESPONSE, r);
+        ScenarioContext.setScenarioContext(ContextKey.CREATED_PET, r.as(Pet.class));
     }
 
     @Then("the response body should show status {string}")
     public void assertUpdatedStatus(String status) {
-        LOG.info("Verifying updated status == {}", status);
         Pet updated = lastResponse().as(Pet.class);
+        LOG.info("Verifying updated status == {}", status);
         assertEquals("Status mismatch", status, updated.getStatus());
     }
 
@@ -118,9 +117,9 @@ public class PetApiSteps {
     @When("I DELETE that pet by its id")
     public void deleteById() {
         long id = lastPet().getId();
-        LOG.info("Deleting pet id={}", id);
+        LOG.info("Deleting pet with id={}", id);
         Response r = PetStoreClient.deletePet(id);
-        LOG.debug("DELETE returned status {}, body: {}", r.getStatusCode(), r.getBody().asString());
+        LOG.debug("DELETE /pet response: {} - {}", r.getStatusCode(), r.getBody().asString());
 
         ScenarioContext.setScenarioContext(ContextKey.LAST_RESPONSE, r);
     }
@@ -128,11 +127,11 @@ public class PetApiSteps {
     @Then("a subsequent GET by that id returns {int}")
     public void assertDeleted(int expectedCode) {
         long id = lastPet().getId();
-        LOG.info("Verifying deletion: GET id={} returns {}", id, expectedCode);
+        LOG.info("Verifying deletion with GET by id={}, expecting status {}", id, expectedCode);
         Response r = PetStoreClient.getPet(id);
+        LOG.debug("GET after delete returned status {}", r.getStatusCode());
         assertEquals("Delete-check status mismatch", expectedCode, r.getStatusCode());
     }
-
 
     //—— HELPER METHODS ——
     private Pet buildPet(String name, String status) {

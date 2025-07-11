@@ -3,7 +3,6 @@ Feature: Login
   Background:
     Given log in page is accessed
 
-  #@run
   @Ui
   Scenario: Verify a user can log in with valid data
     When a new user is signed up
@@ -11,7 +10,7 @@ Feature: Login
     And the user clicks on the submit button
     Then the user is redirected to contact list page
 
- # @run
+  @run
   @Ui
   Scenario: Verify a user cannot log in with invalid data
     When the user attempts to log in with invalid credentials:
@@ -24,6 +23,9 @@ Feature: Login
       |                             | I*Z8QY7I!Yz63Vs      |
     Then the system displays an error message for each set of credentials
       | expected_error_message         |
+      | Incorrect username or password |
+      | Incorrect username or password |
+      | Incorrect username or password |
       | Incorrect username or password |
       | Incorrect username or password |
       | Incorrect username or password |

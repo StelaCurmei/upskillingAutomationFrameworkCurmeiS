@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class LogInSteps {
     private static final Logger LOG = LogManager.getLogger(LogInSteps.class);
@@ -57,8 +58,13 @@ public class LogInSteps {
     private void fillLoginForm(String email, String password) {
         waitForVisible(By.id("email"));
         waitForVisible(By.id("password"));
-        loginPage.setEmail(email);
-        loginPage.setPassword(password);
+
+        // Null-safe assignment
+        String safeEmail = (email == null) ? "" : email;
+        String safePassword = (password == null) ? "" : password;
+
+        loginPage.setEmail(safeEmail);
+        loginPage.setPassword(safePassword);
     }
 
     @And("a new user is signed up")
@@ -111,9 +117,12 @@ public class LogInSteps {
         List<String> actualErrors = new ArrayList<>();
 
         for (Map<String, String> data : cases) {
-            fillLoginForm(data.get("email"), data.get("password"));
+            String email = data.getOrDefault("email", "");
+            String password = data.getOrDefault("password", "");
+
+            fillLoginForm(email, password);
             loginPage.clickSubmit();
-            LOG.info("Attempting invalid login: {}", data);
+            LOG.info("Attempting invalid login with email: '{}' and password: '{}'", email, password);
 
             waitForVisible(By.id("error"));
             actualErrors.add(loginPage.getMessageText());
@@ -126,12 +135,27 @@ public class LogInSteps {
     }
 
     @Then("the system displays an error message for each set of credentials")
-    public void verifyErrorMessages(DataTable table) {
-        List<String> expected = new ArrayList<>();
-        table.asMaps().forEach(row -> expected.add(row.get("expected_error_message")));
+    public void verifyErrorMessages(DataTable expectedTable) {
+        Object raw = ScenarioContext.getScenarioContext(ContextKey.NEGATIVE_ACTUAL_ERRORS);
+        @SuppressWarnings("unchecked")
+        List<String> actual = (List<String>) raw;
 
-        List<String> actual = ScenarioContext.getScenarioContext(ContextKey.NEGATIVE_ACTUAL_ERRORS);
-        Assert.assertEquals("Error messages mismatch.", expected, actual);
-        LOG.info("Verified all invalid login error messages.");
+        List<String> expected = expectedTable
+                .asMaps(String.class, String.class)
+                .stream()
+                .map(row -> row.get("expected_error_message"))
+                .collect(Collectors.toList());
+
+        Assert.assertEquals("Row count mismatch", expected.size(), actual.size());
+
+        for (int i = 0; i < expected.size(); i++) {
+            Assert.assertEquals(
+                    String.format("Mismatch on row #%d", i + 1),
+                    expected.get(i),
+                    actual.get(i)
+            );
+        }
+
+        LOG.info("All invalid login error messages verified.");
     }
 }
